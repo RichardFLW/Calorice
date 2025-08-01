@@ -5,6 +5,7 @@ import { WaterBrand } from "@/types/water";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 
+
 export function WaterCard({ water }: { water: WaterBrand }) {
   return (
     <Card className="w-full relative">
@@ -17,6 +18,26 @@ export function WaterCard({ water }: { water: WaterBrand }) {
 
       <CardHeader className="pb-2">
         <CardTitle className="text-xl font-semibold">{water.name}</CardTitle>
+        {(water.nitrates === 0 || (water.dryResidue ?? 0) <= 50) && (
+          <div className="mt-1 flex flex-wrap gap-1">
+            {water.nitrates === 0 && (
+              <Badge
+                variant="outline"
+                className="text-green-600 border-green-600"
+              >
+                0 nitrate
+              </Badge>
+            )}
+            {(water.dryResidue ?? 0) <= 50 && (
+              <Badge
+                variant="outline"
+                className="text-blue-600 border-blue-600"
+              >
+                Faible minéralisation
+              </Badge>
+            )}
+          </div>
+        )}
         <p className="text-sm text-muted-foreground">
           {capitalize(water.category)} – {formatSub(water.subcategory)}
         </p>
@@ -39,16 +60,6 @@ export function WaterCard({ water }: { water: WaterBrand }) {
   );
 }
 
-function renderItem(label: string, value?: number, unit?: string) {
-  return (
-    <div className="flex flex-col">
-      <span className="font-medium">{label}</span>
-      <span className="text-muted-foreground">
-        {value !== undefined ? `${value}${unit ? ` ${unit}` : ""}` : "–"}
-      </span>
-    </div>
-  );
-}
 
 function capitalize(str: string) {
   return str.charAt(0).toUpperCase() + str.slice(1);
