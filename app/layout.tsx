@@ -2,6 +2,7 @@
 
 import type { Metadata } from "next";
 import "@/styles/globals.css";
+import { ThemeProvider } from "@/components/theme-provider";
 
 export const metadata: Metadata = {
   title: "Kalorice – Suivi nutritionnel",
@@ -15,9 +16,11 @@ export default function RootLayout({
   children: React.ReactNode;
 }>) {
   return (
-    <html lang="fr" className="scroll-smooth">
-      <body className="antialiased bg-background text-foreground min-h-screen">
-        {children}
+    <html lang="fr" suppressHydrationWarning>
+      <body className="antialiased min-h-screen bg-background text-foreground">
+        <ThemeProvider attribute="class" defaultTheme="system" enableSystem>
+          {children}
+        </ThemeProvider>
       </body>
     </html>
   );
