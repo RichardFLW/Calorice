@@ -10,15 +10,15 @@ export type WaterBrand = {
   subcategory: WaterSubcategory;
   sourceLocation?: string;
   pH?: number;
-  dryResidue?: number; // mg/L
-  calcium?: number; // mg/L
-  magnesium?: number; // mg/L
-  sodium?: number; // mg/L
-  potassium?: number; // mg/L
-  bicarbonates?: number; // mg/L
-  sulfates?: number; // mg/L
-  chlorides?: number; // mg/L
-  fluorides?: number; // mg/L
-  nitrates?: number; // mg/L
-  silicates?: number; // mg/L
+  dryResidue?: number; // Résidus à sec (mg/L)
+  calcium?: number;
+  magnesium?: number;
+  sodium?: number;
+  potassium?: number;
+  bicarbonates?: number;
+  sulfates?: number;
+  chlorides?: number;
+  fluorides?: number;
+  nitrates?: number;
+  silicates?: number;
 };
