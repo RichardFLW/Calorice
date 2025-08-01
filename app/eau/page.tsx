@@ -1,6 +1,8 @@
 // app/eau/page.tsx
 "use client";
 
+import { waters } from "@/constants/waters";
+import { WaterTable } from "@/components/eau/water-table";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
@@ -51,13 +53,14 @@ export default function EauPage() {
         </CardContent>
       </Card>
 
+
+
       {/* 🧪 Espace pour la table ou la liste des eaux */}
-      <div className="space-y-2">
-        <h2 className="text-xl font-semibold">Résultats</h2>
+     <h2 className="text-xl font-semibold">Toutes les eaux</h2>
         <p className="text-sm text-muted-foreground">
-          Affichage des eaux filtrées ou triées (à venir).
+          Voici une liste de base que tu peux enrichir.
         </p>
+        <WaterTable data={waters} />
       </div>
-    </div>
   );
 }

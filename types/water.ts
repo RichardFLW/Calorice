@@ -2,11 +2,7 @@
 
 export type WaterCategory = "eau minérale" | "eau de source";
 
-export type WaterSubcategory =
-  | "plate"
-  | "gazeuse"
-  | "naturellement gazeuse"
-  | "gazéifiée";
+export type WaterSubcategory = "plate" | "gazeuse naturelle" | "gazéifiée";
 
 export type WaterBrand = {
   name: string;

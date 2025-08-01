@@ -31,7 +31,7 @@ export const waters: WaterBrand[] = [
   {
     name: "Saint-Yorre",
     category: "eau minérale",
-    subcategory: "gazeuse",
+    subcategory: "gazeuse naturelle",
     sourceLocation: "Saint-Yorre (Allier)",
     pH: 6.1,
     dryResidue: 4774,
