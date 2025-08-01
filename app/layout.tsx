@@ -3,6 +3,7 @@
 import type { Metadata } from "next";
 import "@/styles/globals.css";
 import { ThemeProvider } from "@/components/theme-provider";
+import { Navbar } from "@/components/layout/navbar";
 
 export const metadata: Metadata = {
   title: "Kalorice – Suivi nutritionnel",
@@ -19,7 +20,8 @@ export default function RootLayout({
     <html lang="fr" suppressHydrationWarning>
       <body className="antialiased min-h-screen bg-background text-foreground">
         <ThemeProvider attribute="class" defaultTheme="system" enableSystem>
-          {children}
+          <Navbar />
+          <main>{children}</main>
         </ThemeProvider>
       </body>
     </html>
