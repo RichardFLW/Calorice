@@ -47,6 +47,8 @@ export const waters: WaterBrand[] = [
     category: "eau minérale",
     subcategory: "plate",
     sourceLocation: "Évian-les-Bains (Haute-Savoie)",
+    pH: 7.2,
+    dryResidue: 309,
     calcium: 80,
     magnesium: 26,
     potassium: 1,
