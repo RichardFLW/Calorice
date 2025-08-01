@@ -12,7 +12,7 @@ import {
   SelectValue,
 } from "@/components/ui/select";
 import { waters } from "@/constants/waters";
-import { WaterTable } from "@/components/eau/water-table";
+import { WaterList } from "@/components/eau/water-List";
 
 export default function EauPage() {
   return (
@@ -57,7 +57,7 @@ export default function EauPage() {
           <p className="text-sm text-muted-foreground">
             Voici une liste de base que tu peux enrichir.
           </p>
-          <WaterTable data={waters} />
+          <WaterList data={waters} />
         </div>
       </div>
     </div>
