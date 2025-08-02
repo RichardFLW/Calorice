@@ -3,8 +3,6 @@
 
 import { WaterBrand } from "@/types/water";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import { Badge } from "@/components/ui/badge";
-
 
 export function WaterCard({ water }: { water: WaterBrand }) {
   return (
@@ -18,26 +16,7 @@ export function WaterCard({ water }: { water: WaterBrand }) {
 
       <CardHeader className="pb-2">
         <CardTitle className="text-xl font-semibold">{water.name}</CardTitle>
-        {(water.nitrates === 0 || (water.dryResidue ?? 0) <= 50) && (
-          <div className="mt-1 flex flex-wrap gap-1">
-            {water.nitrates === 0 && (
-              <Badge
-                variant="outline"
-                className="text-green-600 border-green-600"
-              >
-                0 nitrate
-              </Badge>
-            )}
-            {(water.dryResidue ?? 0) <= 50 && (
-              <Badge
-                variant="outline"
-                className="text-blue-600 border-blue-600"
-              >
-                Faible minéralisation
-              </Badge>
-            )}
-          </div>
-        )}
+
         <p className="text-sm text-muted-foreground">
           {capitalize(water.category)} – {formatSub(water.subcategory)}
         </p>
@@ -49,17 +28,18 @@ export function WaterCard({ water }: { water: WaterBrand }) {
             <div key={key} className="flex flex-col">
               <span className="font-medium">{label}</span>
               <span className="text-muted-foreground">
-                {water[key as keyof WaterBrand]}{" "}
-                {units[key as keyof WaterBrand] ?? ""}
+                {water[key as keyof WaterBrand]}
               </span>
             </div>
           ) : null
         )}
       </CardContent>
+      <div className="px-4 pt-4 text-end text-xs text-muted-foreground italic">
+        Toutes les valeurs sont exprimées en mg/L, sauf pH.
+      </div>
     </Card>
   );
 }
-
 
 function capitalize(str: string) {
   return str.charAt(0).toUpperCase() + str.slice(1);
@@ -70,6 +50,7 @@ function formatSub(sub: string) {
   if (sub === "gazéifiée") return "gazéifiée (ajout de CO₂)";
   return sub;
 }
+
 
 const mineralLabels: Partial<Record<keyof WaterBrand, string>> = {
   dryResidue: "Résidus",
@@ -86,16 +67,3 @@ const mineralLabels: Partial<Record<keyof WaterBrand, string>> = {
   fluorides: "Fluor",
 };
 
-const units: Partial<Record<keyof WaterBrand, string>> = {
-  dryResidue: "mg/L",
-  sodium: "mg/L",
-  calcium: "mg/L",
-  magnesium: "mg/L",
-  potassium: "mg/L",
-  bicarbonates: "mg/L",
-  sulfates: "mg/L",
-  chlorides: "mg/L",
-  silicates: "mg/L",
-  nitrates: "mg/L",
-  fluorides: "mg/L",
-};

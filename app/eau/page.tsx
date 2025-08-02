@@ -11,10 +11,47 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
+import { Badge } from "@/components/ui/badge";
+import { useState } from "react";
 import { waters } from "@/constants/waters";
-import { WaterList } from "@/components/eau/water-List";
+import { WaterList } from "@/components/eau/water-list";
+
+const filters = [
+  { id: "nitrate0", label: "0 nitrate" },
+  { id: "lowResidue", label: "Faible minéralisation" },
+  { id: "highMagnesium", label: "Riche en magnésium" },
+  { id: "highBicarbonate", label: "Riche en bicarbonates" },
+  { id: "highSodium", label: "Riche en sodium" },
+];
 
 export default function EauPage() {
+  const [activeFilters, setActiveFilters] = useState<string[]>([]);
+
+  function toggleFilter(id: string) {
+    setActiveFilters((prev) =>
+      prev.includes(id) ? prev.filter((f) => f !== id) : [...prev, id]
+    );
+  }
+
+  const filteredWaters = waters.filter((w) => {
+    return activeFilters.every((filter) => {
+      switch (filter) {
+        case "nitrate0":
+          return w.nitrates === 0;
+        case "lowResidue":
+          return (w.dryResidue ?? Infinity) <= 50;
+        case "highMagnesium":
+          return (w.magnesium ?? 0) >= 50;
+        case "highBicarbonate":
+          return (w.bicarbonates ?? 0) >= 600;
+        case "highSodium":
+          return (w.sodium ?? 0) >= 200;
+        default:
+          return true;
+      }
+    });
+  });
+
   return (
     <div className="w-full py-10 px-4 sm:px-6">
       <div className="max-w-4xl mx-auto space-y-8">
@@ -49,6 +86,21 @@ export default function EauPage() {
                 </SelectContent>
               </Select>
             </div>
+
+            <div className="border-t pt-4 flex flex-wrap justify-end gap-2">
+              {filters.map((filter) => (
+                <Badge
+                  key={filter.id}
+                  variant={
+                    activeFilters.includes(filter.id) ? "default" : "outline"
+                  }
+                  onClick={() => toggleFilter(filter.id)}
+                  className="cursor-pointer select-none"
+                >
+                  {filter.label}
+                </Badge>
+              ))}
+            </div>
           </CardContent>
         </Card>
 
@@ -57,7 +109,7 @@ export default function EauPage() {
           <p className="text-sm text-muted-foreground">
             Voici une liste de base que tu peux enrichir.
           </p>
-          <WaterList data={waters} />
+          <WaterList data={filteredWaters} />
         </div>
       </div>
     </div>
