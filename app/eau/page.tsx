@@ -12,9 +12,11 @@ import {
   SelectValue,
 } from "@/components/ui/select";
 import { Badge } from "@/components/ui/badge";
+import { Toggle } from "@/components/ui/toggle";
 import { useState } from "react";
 import { waters } from "@/constants/waters";
 import { WaterList } from "@/components/eau/water-list";
+import { WaterListCondensedAdvanced } from "@/components/eau/water-card-condensed-advanced";
 
 const filters = [
   { id: "nitrate0", label: "0 nitrate" },
@@ -26,6 +28,7 @@ const filters = [
 
 export default function EauPage() {
   const [activeFilters, setActiveFilters] = useState<string[]>([]);
+  const [isCondensed, setIsCondensed] = useState(false);
 
   function toggleFilter(id: string) {
     setActiveFilters((prev) =>
@@ -35,17 +38,19 @@ export default function EauPage() {
 
   const filteredWaters = waters.filter((w) => {
     return activeFilters.every((filter) => {
+      const source = w.sources[0];
+      const comp = source?.composition || {};
       switch (filter) {
         case "nitrate0":
-          return w.nitrates === 0;
+          return comp.nitrate === 0;
         case "lowResidue":
-          return (w.dryResidue ?? Infinity) <= 50;
+          return comp.residu <= 50;
         case "highMagnesium":
-          return (w.magnesium ?? 0) >= 50;
+          return comp.magnesium >= 50;
         case "highBicarbonate":
-          return (w.bicarbonates ?? 0) >= 600;
+          return comp.bicarbonates >= 600;
         case "highSodium":
-          return (w.sodium ?? 0) >= 200;
+          return comp.sodium >= 200;
         default:
           return true;
       }
@@ -105,11 +110,24 @@ export default function EauPage() {
         </Card>
 
         <div className="space-y-2">
-          <h2 className="text-xl font-semibold">Toutes les eaux</h2>
+          <div className="flex justify-between items-center">
+            <h2 className="text-xl font-semibold">Toutes les eaux</h2>
+            <Toggle
+              pressed={isCondensed}
+              onPressedChange={setIsCondensed}
+              className="text-xs"
+            >
+              Vue simplifiée
+            </Toggle>
+          </div>
           <p className="text-sm text-muted-foreground">
             Voici une liste de base que tu peux enrichir.
           </p>
-          <WaterList data={filteredWaters} />
+          {isCondensed ? (
+            <WaterListCondensedAdvanced data={filteredWaters} />
+          ) : (
+            <WaterList data={filteredWaters} />
+          )}
         </div>
       </div>
     </div>
