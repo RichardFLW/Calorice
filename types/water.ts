@@ -22,6 +22,7 @@ export type WaterSource = {
   name: string;
   location?: string;
   composition: MineralComposition;
+  benefits?: string[];
 };
 
 export type Water = {

@@ -150,6 +150,11 @@ export const waters: Water[] = [
           residu: 25,
           ph: 5.85,
         },
+        benefits: [
+          "Convient aux nourrissons",
+          "Idéale pour les reins fragiles",
+          "Faible minéralisation",
+        ],
       },
     ],
   },

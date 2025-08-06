@@ -11,9 +11,11 @@ import {
   SelectContent,
   SelectItem,
 } from "@/components/ui/select";
+import { ChevronDown, ChevronUp } from "lucide-react";
 
 export function WaterCard({ water }: { water: Water }) {
   const [selectedSourceIndex, setSelectedSourceIndex] = useState(0);
+  const [showBenefits, setShowBenefits] = useState(false);
   const currentSource = water.sources[selectedSourceIndex];
 
   const handleSourceChange = (value: string) => {
@@ -21,9 +23,38 @@ export function WaterCard({ water }: { water: Water }) {
     if (index !== -1) setSelectedSourceIndex(index);
   };
 
+  const leftKeys = [
+    "residu",
+    "ph",
+
+    "chlorures",
+    "bicarbonates",
+    "sulfates",
+    "silice",
+    "nitrate",
+    "fluorures",
+  ];
+
+  const rightKeys = [
+    "calcium",
+    "magnesium",
+    "potassium",
+    "sodium",
+    
+  ];
+
   return (
-    <Card className="w-full relative">
-      {/* Source dans le coin haut droit */}
+    <Card className="w-full relative p-5">
+      <CardHeader className="pb-2">
+        <CardTitle className="text-2xl font-semibold">{water.name}</CardTitle>
+        <p className="text-sm text-muted-foreground">
+          {capitalize(water.category)} – {formatSub(water.subcategory)}
+        </p>
+      </CardHeader>
+
+      <hr className="border-muted" />
+
+      {/* Source (sélecteur si Cristaline) */}
       {water.sources.length > 1 && water.name.toLowerCase() === "cristaline" ? (
         <div className="absolute right-4 top-4 text-xs text-muted-foreground italic">
           <Select
@@ -48,35 +79,75 @@ export function WaterCard({ water }: { water: Water }) {
         </div>
       )}
 
-      <CardHeader className="pb-2">
-        <CardTitle className="text-xl font-semibold">{water.name}</CardTitle>
-        <p className="text-sm text-muted-foreground">
-          {capitalize(water.category)} – {formatSub(water.subcategory)}
-        </p>
-      </CardHeader>
+      <CardContent>
+        <div className="grid grid-cols-2 gap-x-8 gap-y-2 mb-4 text-sm">
+          <div className="space-y-2">
+            {leftKeys.map((key) => {
+              const value =
+                currentSource.composition[
+                  key as keyof typeof currentSource.composition
+                ];
+              return value !== undefined ? (
+                <div key={key} className="flex justify-between">
+                  <span className="font-medium">{mineralLabels[key]}</span>
+                  <span className="text-muted-foreground">{value}</span>
+                </div>
+              ) : null;
+            })}
+          </div>
+          <div className="space-y-2">
+            {rightKeys.map((key) => {
+              const value =
+                currentSource.composition[
+                  key as keyof typeof currentSource.composition
+                ];
+              return value !== undefined ? (
+                <div key={key} className="flex justify-between">
+                  <span className="font-medium">{mineralLabels[key]}</span>
+                  <span className="text-muted-foreground">{value}</span>
+                </div>
+              ) : null;
+            })}
+          </div>
+        </div>
 
-      <CardContent className="grid grid-cols-2 sm:grid-cols-3 gap-4 text-sm">
-        {Object.entries(mineralLabels).map(([key, label]) =>
-          currentSource.composition[
-            key as keyof typeof currentSource.composition
-          ] !== undefined ? (
-            <div key={key} className="flex flex-col">
-              <span className="font-medium">{label}</span>
-              <span className="text-muted-foreground">
-                {
-                  currentSource.composition[
-                    key as keyof typeof currentSource.composition
-                  ]
-                }
-              </span>
-            </div>
-          ) : null
-        )}
+        <hr className="border-muted my-3" />
+
+        <span className="block text-xs text-muted-foreground pb-4">
+          Toutes les valeurs exprimées en mg/L, sauf pH.
+        </span>
+
+        {Array.isArray(currentSource.benefits) &&
+          currentSource.benefits.length > 0 && (
+            <>
+              <div className="pt-2 flex justify-center">
+                <button
+                  onClick={() => setShowBenefits((prev) => !prev)}
+                  className="flex items-center gap-1 hover:text-foreground text-xs"
+                >
+                  {showBenefits ? (
+                    <ChevronUp className="w-4 h-4" />
+                  ) : (
+                    <ChevronDown className="w-4 h-4" />
+                  )}
+                  {showBenefits
+                    ? "Masquer les bienfaits"
+                    : "Voir les bienfaits"}
+                </button>
+              </div>
+
+              {showBenefits && (
+                <div className="pt-2">
+                  <ul className="pl-4 list-disc text-xs text-muted-foreground space-y-1">
+                    {currentSource.benefits.map((b, i) => (
+                      <li key={i}>{b}</li>
+                    ))}
+                  </ul>
+                </div>
+              )}
+            </>
+          )}
       </CardContent>
-
-      <div className="px-4 pt-4 text-end text-xs text-muted-foreground italic">
-        Toutes les valeurs exprimées en mg/L, sauf pH.
-      </div>
     </Card>
   );
 }
