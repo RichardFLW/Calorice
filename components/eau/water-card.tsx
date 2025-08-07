@@ -11,12 +11,13 @@ import {
   SelectContent,
   SelectItem,
 } from "@/components/ui/select";
-import { Badge } from "@/components/ui/badge"
+import { Badge } from "@/components/ui/badge";
 import { ChevronDown, ChevronUp } from "lucide-react";
 
 export function WaterCard({ water }: { water: Water }) {
   const [selectedSourceIndex, setSelectedSourceIndex] = useState(0);
   const [showBenefits, setShowBenefits] = useState(false);
+
   const currentSource = water.sources[selectedSourceIndex];
 
   const handleSourceChange = (value: string) => {
@@ -24,31 +25,10 @@ export function WaterCard({ water }: { water: Water }) {
     if (index !== -1) setSelectedSourceIndex(index);
   };
 
-  const leftKeys = [
-    "residu",
-    "ph",
-
-    "chlorures",
-    "bicarbonates",
-    "sulfates",
-    "silice",
-    "nitrate",
-    "fluorures",
-  ];
-
-  const rightKeys = [
-    "calcium",
-    "magnesium",
-    "potassium",
-    "sodium",
-    
-  ];
-
   return (
     <Card className="w-full relative p-5">
       <CardHeader className="pb-2">
-        <CardTitle className="text-2xl font-semibold">{water.name} </CardTitle>
-
+        <CardTitle className="text-2xl font-semibold">{water.name}</CardTitle>
         <p className="text-sm text-muted-foreground">
           {capitalize(water.category)} – {formatSub(water.subcategory)}
         </p>
@@ -56,62 +36,14 @@ export function WaterCard({ water }: { water: Water }) {
 
       <hr className="border-muted" />
 
-      {/* Source (sélecteur si Cristaline) */}
-      {water.sources.length > 1 && water.name.toLowerCase() === "cristaline" ? (
-        <div className="absolute right-4 top-4 text-xs text-muted-foreground italic">
-          <Select
-            onValueChange={handleSourceChange}
-            defaultValue={currentSource.name}
-          >
-            <SelectTrigger className="text-xs w-fit px-2 py-0 h-auto min-h-6 border-muted">
-              <SelectValue placeholder="Source" />
-            </SelectTrigger>
-            <SelectContent>
-              {water.sources.map((source) => (
-                <SelectItem key={source.name} value={source.name}>
-                  {source.name}
-                </SelectItem>
-              ))}
-            </SelectContent>
-          </Select>
-        </div>
-      ) : (
-        <div className="absolute right-4 top-4 text-xs text-muted-foreground italic">
-          {currentSource.location || currentSource.name}
-        </div>
-      )}
+      <WaterSourceSelector
+        water={water}
+        currentSource={currentSource}
+        handleChange={handleSourceChange}
+      />
 
       <CardContent>
-        <div className="grid grid-cols-2 gap-x-8 gap-y-2 mb-4 text-sm">
-          <div className="space-y-2">
-            {leftKeys.map((key) => {
-              const value =
-                currentSource.composition[
-                  key as keyof typeof currentSource.composition
-                ];
-              return value !== undefined ? (
-                <div key={key} className="flex justify-between">
-                  <span className="font-medium">{mineralLabels[key]}</span>
-                  <span className="text-muted-foreground">{value}</span>
-                </div>
-              ) : null;
-            })}
-          </div>
-          <div className="space-y-2">
-            {rightKeys.map((key) => {
-              const value =
-                currentSource.composition[
-                  key as keyof typeof currentSource.composition
-                ];
-              return value !== undefined ? (
-                <div key={key} className="flex justify-between">
-                  <span className="font-medium">{mineralLabels[key]}</span>
-                  <span className="text-muted-foreground">{value}</span>
-                </div>
-              ) : null;
-            })}
-          </div>
-        </div>
+        <WaterCompositionGrid composition={currentSource.composition} />
 
         <hr className="border-muted my-3" />
 
@@ -126,47 +58,15 @@ export function WaterCard({ water }: { water: Water }) {
 
         {Array.isArray(currentSource.benefits) &&
           currentSource.benefits.length > 0 && (
-            <>
-              <div className="pt-2 flex justify-center">
-                <button
-                  onClick={() => setShowBenefits((prev) => !prev)}
-                  className="flex items-center gap-1 hover:text-foreground text-xs"
-                >
-                  {showBenefits ? (
-                    <ChevronUp className="w-4 h-4" />
-                  ) : (
-                    <ChevronDown className="w-4 h-4" />
-                  )}
-                  {showBenefits
-                    ? "Masquer les bienfaits"
-                    : "Voir les bienfaits"}
-                </button>
-              </div>
-
-              {showBenefits && (
-                <div className="pt-2">
-                  <ul className="pl-4 list-disc text-xs text-muted-foreground space-y-1">
-                    {currentSource.benefits.map((b, i) => (
-                      <li key={i}>{b}</li>
-                    ))}
-                  </ul>
-                </div>
-              )}
-            </>
+            <WaterBenefitsToggle
+              show={showBenefits}
+              toggle={() => setShowBenefits((prev) => !prev)}
+              benefits={currentSource.benefits}
+            />
           )}
       </CardContent>
     </Card>
   );
-}
-
-function capitalize(str: string) {
-  return str.charAt(0).toUpperCase() + str.slice(1);
-}
-
-function formatSub(sub: string) {
-  if (sub === "gazeuse naturelle") return "gazeuse naturelle";
-  if (sub === "gazéifiée") return "gazéifiée (ajout de CO₂)";
-  return sub;
 }
 
 const mineralLabels: Record<string, string> = {
@@ -183,3 +83,133 @@ const mineralLabels: Record<string, string> = {
   nitrate: "Nitrates",
   fluorures: "Fluor",
 };
+
+// 🧩 Sous-composant : Sélecteur de source ou affichage lieu
+function WaterSourceSelector({
+  water,
+  currentSource,
+  handleChange,
+}: {
+  water: Water;
+  currentSource: Water["sources"][0];
+  handleChange: (value: string) => void;
+}) {
+  return water.sources.length > 1 &&
+    water.name.toLowerCase() === "cristaline" ? (
+    <div className="absolute right-4 top-4 text-xs text-muted-foreground italic">
+      <Select onValueChange={handleChange} defaultValue={currentSource.name}>
+        <SelectTrigger className="text-xs w-fit px-2 py-0 h-auto min-h-6 border-muted">
+          <SelectValue placeholder="Source" />
+        </SelectTrigger>
+        <SelectContent>
+          {water.sources.map((source) => (
+            <SelectItem key={source.name} value={source.name}>
+              {source.name}
+            </SelectItem>
+          ))}
+        </SelectContent>
+      </Select>
+    </div>
+  ) : (
+    <div className="absolute right-4 top-4 text-xs text-muted-foreground italic">
+      {currentSource.location || currentSource.name}
+    </div>
+  );
+}
+
+// 🧩 Sous-composant : Grille des minéraux
+function WaterCompositionGrid({
+  composition,
+}: {
+  composition: Water["sources"][0]["composition"];
+}) {
+  const leftKeys = [
+    "residu",
+    "ph",
+    "chlorures",
+    "bicarbonates",
+    "sulfates",
+    "silice",
+    "nitrate",
+    "fluorures",
+  ];
+
+  const rightKeys = ["calcium", "magnesium", "potassium", "sodium"];
+
+  return (
+    <div className="grid grid-cols-2 gap-x-8 gap-y-2 mb-4 text-sm">
+      <div className="space-y-2">
+        {leftKeys.map((key) => {
+          const value = composition[key as keyof typeof composition];
+          return value !== undefined ? (
+            <div key={key} className="flex justify-between">
+              <span className="font-medium">{mineralLabels[key]}</span>
+              <span className="text-muted-foreground">{value}</span>
+            </div>
+          ) : null;
+        })}
+      </div>
+      <div className="space-y-2">
+        {rightKeys.map((key) => {
+          const value = composition[key as keyof typeof composition];
+          return value !== undefined ? (
+            <div key={key} className="flex justify-between">
+              <span className="font-medium">{mineralLabels[key]}</span>
+              <span className="text-muted-foreground">{value}</span>
+            </div>
+          ) : null;
+        })}
+      </div>
+    </div>
+  );
+}
+
+// 🧩 Sous-composant : Bienfaits affichables/masquables
+function WaterBenefitsToggle({
+  show,
+  toggle,
+  benefits,
+}: {
+  show: boolean;
+  toggle: () => void;
+  benefits: string[];
+}) {
+  return (
+    <>
+      <div className="pt-2 flex justify-center">
+        <button
+          onClick={toggle}
+          className="flex items-center gap-1 hover:text-foreground text-xs"
+        >
+          {show ? (
+            <ChevronUp className="w-4 h-4" />
+          ) : (
+            <ChevronDown className="w-4 h-4" />
+          )}
+          {show ? "Masquer les bienfaits" : "Voir les bienfaits"}
+        </button>
+      </div>
+
+      {show && (
+        <div className="pt-2">
+          <ul className="pl-4 list-disc text-xs text-muted-foreground space-y-1">
+            {benefits.map((b, i) => (
+              <li key={i}>{b}</li>
+            ))}
+          </ul>
+        </div>
+      )}
+    </>
+  );
+}
+
+// 🧩 Fonctions utilitaires
+function capitalize(str: string) {
+  return str.charAt(0).toUpperCase() + str.slice(1);
+}
+
+function formatSub(sub: string) {
+  if (sub === "gazeuse naturelle") return "gazeuse naturelle";
+  if (sub === "gazéifiée") return "gazéifiée (ajout de CO₂)";
+  return sub;
+}
