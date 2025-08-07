@@ -11,6 +11,7 @@ import {
   SelectContent,
   SelectItem,
 } from "@/components/ui/select";
+import { Badge } from "@/components/ui/badge"
 import { ChevronDown, ChevronUp } from "lucide-react";
 
 export function WaterCard({ water }: { water: Water }) {
@@ -46,7 +47,8 @@ export function WaterCard({ water }: { water: Water }) {
   return (
     <Card className="w-full relative p-5">
       <CardHeader className="pb-2">
-        <CardTitle className="text-2xl font-semibold">{water.name}</CardTitle>
+        <CardTitle className="text-2xl font-semibold">{water.name} </CardTitle>
+
         <p className="text-sm text-muted-foreground">
           {capitalize(water.category)} – {formatSub(water.subcategory)}
         </p>
@@ -114,6 +116,11 @@ export function WaterCard({ water }: { water: Water }) {
         <hr className="border-muted my-3" />
 
         <span className="block text-xs text-muted-foreground pb-4">
+          {water.verified && (
+            <Badge className="bg-green-100 text-green-700 border border-green-300 text-[10px] mr-2">
+              Vérifié
+            </Badge>
+          )}
           Toutes les valeurs exprimées en mg/L, sauf pH.
         </span>
 

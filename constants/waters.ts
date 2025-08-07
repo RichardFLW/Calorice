@@ -7,6 +7,7 @@ export const waters: Water[] = [
     name: "Volvic",
     category: "eau minérale",
     subcategory: "plate",
+    verified: false,
     sources: [
       {
         name: "Source Volvic",
@@ -32,6 +33,7 @@ export const waters: Water[] = [
     name: "Evian",
     category: "eau minérale",
     subcategory: "plate",
+    verified: false,
     sources: [
       {
         name: "Source Evian",
@@ -57,6 +59,7 @@ export const waters: Water[] = [
     name: "Wattwiller",
     category: "eau minérale",
     subcategory: "plate",
+    verified: false,
     sources: [
       {
         name: "Source Wattwiller",
@@ -82,6 +85,7 @@ export const waters: Water[] = [
     name: "Thonon",
     category: "eau de source",
     subcategory: "plate",
+    verified: false,
     sources: [
       {
         name: "Source Thonon",
@@ -107,6 +111,7 @@ export const waters: Water[] = [
     name: "Contrex",
     category: "eau minérale",
     subcategory: "plate",
+    verified: false,
     sources: [
       {
         name: "Source Contrex",
@@ -132,6 +137,7 @@ export const waters: Water[] = [
     name: "Mont Roucous",
     category: "eau minérale",
     subcategory: "plate",
+    verified: false,
     sources: [
       {
         name: "Source Mont Roucous",
@@ -162,6 +168,7 @@ export const waters: Water[] = [
     name: "Celtic",
     category: "eau minérale",
     subcategory: "plate",
+    verified: false,
     sources: [
       {
         name: "Source Celtic",
@@ -187,6 +194,7 @@ export const waters: Water[] = [
     name: "Abatilles",
     category: "eau minérale",
     subcategory: "plate",
+    verified: false,
     sources: [
       {
         name: "Source Abatilles",
@@ -212,6 +220,7 @@ export const waters: Water[] = [
     name: "Badoit",
     category: "eau minérale",
     subcategory: "gazeuse naturelle",
+    verified: false,
     sources: [
       {
         name: "Source Badoit",
@@ -237,6 +246,7 @@ export const waters: Water[] = [
     name: "Rozana",
     category: "eau minérale",
     subcategory: "gazeuse naturelle",
+    verified: false,
     sources: [
       {
         name: "Source Rozana",
@@ -262,6 +272,7 @@ export const waters: Water[] = [
     name: "Vittel",
     category: "eau minérale",
     subcategory: "plate",
+    verified: false,
     sources: [
       {
         name: "Source Vittel",
@@ -287,6 +298,7 @@ export const waters: Water[] = [
     name: "Quézac",
     category: "eau minérale",
     subcategory: "gazeuse naturelle",
+    verified: false,
     sources: [
       {
         name: "Source Quézac",
@@ -312,6 +324,7 @@ export const waters: Water[] = [
     name: "Perrier",
     category: "eau minérale",
     subcategory: "gazeuse naturelle",
+    verified: false,
     sources: [
       {
         name: "Source Perrier",
@@ -337,6 +350,7 @@ export const waters: Water[] = [
     name: "San Pellegrino",
     category: "eau minérale",
     subcategory: "gazeuse naturelle",
+    verified: false,
     sources: [
       {
         name: "Source San Pellegrino",
@@ -362,6 +376,7 @@ export const waters: Water[] = [
     name: "Hépar",
     category: "eau minérale",
     subcategory: "plate",
+    verified: false,
     sources: [
       {
         name: "Source Hépar",
@@ -387,6 +402,7 @@ export const waters: Water[] = [
     name: "Velleminfroy",
     category: "eau minérale",
     subcategory: "plate",
+    verified: false,
     sources: [
       {
         name: "Source Velleminfroy",
@@ -412,6 +428,7 @@ export const waters: Water[] = [
     name: "Montcalm",
     category: "eau minérale",
     subcategory: "plate",
+    verified: false,
     sources: [
       {
         name: "Source Montcalm",
@@ -437,6 +454,7 @@ export const waters: Water[] = [
     name: "Vichy Célestins",
     category: "eau minérale",
     subcategory: "gazeuse naturelle",
+    verified: false,
     sources: [
       {
         name: "Source Vichy Célestins",
@@ -462,6 +480,7 @@ export const waters: Water[] = [
     name: "La Salvetat",
     category: "eau minérale",
     subcategory: "gazeuse naturelle",
+    verified: false,
     sources: [
       {
         name: "Source La Salvetat",
@@ -487,6 +506,7 @@ export const waters: Water[] = [
     name: "Puits Saint Georges",
     category: "eau minérale",
     subcategory: "gazeuse naturelle",
+    verified: false,
     sources: [
       {
         name: "Source Puits Saint Georges",
@@ -512,6 +532,7 @@ export const waters: Water[] = [
     name: "Courmayeur",
     category: "eau minérale",
     subcategory: "plate",
+    verified: false,
     sources: [
       {
         name: "Source Courmayeur",
@@ -537,10 +558,12 @@ export const waters: Water[] = [
     name: "Cristaline",
     category: "eau de source",
     subcategory: "plate",
+    verified: false,
     sources: [
       {
         name: "Source Roxane",
         location: "Verdun-sur-Garonne",
+
         composition: {
           calcium: 45,
           magnesium: 5,

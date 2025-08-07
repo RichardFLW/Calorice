@@ -30,4 +30,5 @@ export type Water = {
   category: WaterCategory;
   subcategory: WaterSubcategory;
   sources: WaterSource[];
+  verified?: boolean;
 };

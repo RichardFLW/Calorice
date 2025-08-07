@@ -10,6 +10,7 @@ import {
   PopoverTrigger,
 } from "@/components/ui/popover";
 import { Button } from "@/components/ui/button";
+import { Badge } from "@/components/ui/badge";
 import { ChevronDown } from "lucide-react";
 
 type Props = {
@@ -51,8 +52,13 @@ export function WaterListCondensedAdvanced({ data }: Props) {
             className="p-4 text-sm rounded-2xl shadow-sm border border-muted bg-background hover:shadow-md transition"
           >
             <div className="flex items-center justify-between mb-3">
-              <div className="font-semibold text-base text-primary/90">
-                {water.name}
+              <div className="flex items-center gap-2">
+                <p className="font-medium">{water.name}</p>
+                {water.verified && (
+                  <Badge className="bg-green-100 text-green-700 border border-green-300 text-[10px]">
+                    Vérifié
+                  </Badge>
+                )}
               </div>
               {water.sources.length > 1 && (
                 <Popover
