@@ -31,4 +31,9 @@ export const { handlers, auth, signIn, signOut } = NextAuth({
       return `${baseUrl}/dashboard`;
     },
   },
+
+  pages: {
+    // Redirige les erreurs d’Auth.js vers notre page
+    error: "/auth/error",
+  },
 });
