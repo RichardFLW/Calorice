@@ -18,60 +18,65 @@ export default function EmailCapture() {
   const [ok, setOk] = useState(false);
   const [loading, setLoading] = useState(false);
 
-  const onSubmit = async (e: React.FormEvent) => {
+  async function handleSubmit(e: React.FormEvent<HTMLFormElement>) {
     e.preventDefault();
-    setOk(false);
     setError(null);
+    setOk(false);
 
-    const result = schema.safeParse({ email });
-    if (!result.success) {
-      const { fieldErrors } = result.error.flatten();
-      setError(fieldErrors.email?.[0] ?? "Erreur.");
+    const parsed = schema.safeParse({ email });
+    if (!parsed.success) {
+      setError(parsed.error.issues[0]?.message ?? "Email invalide.");
       return;
     }
 
-    setLoading(true);
     try {
-      // ✅ Envoie l'email magique sans changer de page
-      await signIn("resend", {
+      setLoading(true);
+      const res = await signIn("resend", {
         email,
-        redirect: false, // <- pas de navigation vers /verify-request
-        callbackUrl: "/dashboard", // <- but après connexion
-        redirectTo: "/dashboard", // <- compat (si jamais)
+        redirect: false,
+        callbackUrl: "/dashboard",
       });
-
-      setOk(true);
-      setEmail("");
-    } catch {
-      setError("L’envoi a échoué. Réessaie.");
+      if (res?.error) {
+        setError(res.error);
+        setOk(false);
+      } else {
+        setOk(true);
+      }
+    } catch (err: any) {
+      setError(err?.message ?? "Une erreur est survenue.");
     } finally {
       setLoading(false);
     }
-  };
+  }
+
+  const describedBy = error ? "email-error" : undefined;
 
   return (
-    <form onSubmit={onSubmit} className="w-full max-w-md space-y-2">
-      <div className="flex items-start gap-2">
+    <form onSubmit={handleSubmit} className="space-y-2" noValidate>
+      <label htmlFor="email" className="block text-sm font-medium">
+        Connexion par email
+      </label>
+      <div className="flex gap-2">
         <input
-          type="email"
+          id="email"
           name="email"
-          placeholder="Entrez votre email"
+          type="email"
+          inputMode="email"
+          autoComplete="email"
+          placeholder="ton@email.fr"
+          className="w-full rounded-md border px-3 py-2 text-sm outline-none focus:ring-2 focus:ring-gray-900"
           value={email}
-          onChange={(e) => setEmail(e.target.value)}
-          className={`flex-1 rounded-md border px-3 py-2 outline-none transition
-            ${
-              error ? "border-red-500" : "border-gray-300 focus:border-gray-400"
-            }
-          `}
-          aria-invalid={!!error}
-          aria-describedby="email-error"
+          onChange={(e) => setEmail(e.target.value.trim())}
+          aria-invalid={Boolean(error) || undefined}
+          aria-describedby={describedBy}
+          required
         />
         <button
           type="submit"
           disabled={loading}
-          className="rounded-md px-4 py-2 bg-black text-white disabled:opacity-60"
+          className="shrink-0 rounded-md bg-black px-4 py-2 text-sm text-white hover:bg-gray-900 disabled:opacity-50"
         >
-          {loading ? "..." : "Valider"}
+          {loading ? "Envoi..." : "Recevoir le lien"}
         </button>
       </div>
 
