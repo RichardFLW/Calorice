@@ -1,0 +1,24 @@
+# /docker-compose.yml
+version: "3.9"
+
+services:
+  postgres:
+    image: postgres:16
+    container_name: calorice-postgres
+    restart: unless-stopped
+    environment:
+      POSTGRES_USER: calorice_user
+      POSTGRES_PASSWORD: changeme
+      POSTGRES_DB: calorice
+    ports:
+      - "5433:5432"
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U calorice_user -d calorice"]
+      interval: 5s
+      timeout: 3s
+      retries: 10
+
+volumes:
+  postgres_data:
