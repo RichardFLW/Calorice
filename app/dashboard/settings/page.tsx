@@ -1,11 +1,14 @@
 // app/dashboard/settings/page.tsx
+import DeleteAccountSection from "@/components/settings/DeleteAccountSection";
+
 export default function SettingsPage() {
   return (
-    <section className="space-y-2">
+    <div className="mx-auto max-w-2xl p-6 space-y-10">
       <h1 className="text-2xl font-semibold">Paramètres</h1>
-      <p className="text-gray-600 text-sm">
-        Page à compléter : préférences, langue, sécurité…
-      </p>
-    </section>
+
+      {/* …autres sections paramètres… */}
+
+      <DeleteAccountSection />
+    </div>
   );
 }
