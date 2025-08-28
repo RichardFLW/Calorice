@@ -1,54 +1,16 @@
-// app/dashboard/actions.ts
 "use server";
 
 import { auth } from "@/auth";
 import { prisma } from "@/lib/prisma";
+import { revalidatePath } from "next/cache";
+import { computeCalories } from "@/lib/computeCalories";
 
 export type AddMealState = {
   ok?: boolean;
   error?: string;
 };
 
-function computeCalories(opts: {
-  caloriesPer100g?: number | null;
-  caloriesPerPortion?: number | null;
-  servingSize?: number | null; // ex: 30
-  unit: "g" | "ml" | "portion";
-  amount: number; // ex: 100 g, ou 1 portion
-}): number | null {
-  const { caloriesPer100g, caloriesPerPortion, servingSize, unit, amount } =
-    opts;
-
-  if (unit === "portion") {
-    if (typeof caloriesPerPortion === "number") {
-      return caloriesPerPortion * amount;
-    }
-    if (
-      typeof caloriesPer100g === "number" &&
-      typeof servingSize === "number" &&
-      servingSize > 0
-    ) {
-      return (caloriesPer100g * servingSize * amount) / 100;
-    }
-    return null;
-  }
-
-  // g / ml
-  if (typeof caloriesPer100g === "number") {
-    return (caloriesPer100g * amount) / 100;
-  }
-  if (
-    typeof caloriesPerPortion === "number" &&
-    typeof servingSize === "number" &&
-    servingSize > 0
-  ) {
-    // déduit les kcal/100g à partir de la portion
-    const per100 = (caloriesPerPortion * 100) / servingSize;
-    return (per100 * amount) / 100;
-  }
-  return null;
-}
-
+// ➤ Ajouter une entrée repas
 export async function addMealEntryAction(
   _prev: AddMealState,
   formData: FormData
@@ -93,7 +55,7 @@ export async function addMealEntryAction(
   if (calories == null)
     return { error: "Impossible de calculer les calories pour cet aliment." };
 
-  // Optionnel: snapshots macros
+  // Optionnel: snapshot des macros
   let macrosSnapshot: Record<string, number> | undefined;
   if (unit === "portion") {
     if (
@@ -114,13 +76,12 @@ export async function addMealEntryAction(
       };
     }
   } else {
-    // g/ml
+    const factor = amount / 100;
     if (
       food.fatPer100g != null ||
       food.carbsPer100g != null ||
       food.proteinPer100g != null
     ) {
-      const factor = amount / 100;
       macrosSnapshot = {
         ...(food.fatPer100g != null ? { fat: food.fatPer100g * factor } : {}),
         ...(food.carbsPer100g != null
@@ -154,4 +115,52 @@ export async function addMealEntryAction(
   });
 
   return { ok: true };
+}
+
+// ➤ Récupérer toutes les entrées de l’utilisateur
+export async function getEntries() {
+  const session = await auth();
+  if (!session?.user?.email) return [];
+
+  const user = await prisma.user.findUnique({
+    where: { email: session.user.email },
+    select: { id: true },
+  });
+  if (!user) return [];
+
+  return prisma.mealEntry.findMany({
+    where: { userId: user.id },
+    orderBy: { eatenAt: "desc" },
+    include: {
+      food: true,
+    },
+  });
+}
+
+// ➤ Supprimer une entrée
+export async function removeEntryAction(_prev: any, formData: FormData) {
+  const id = formData.get("id")?.toString();
+  if (!id) return;
+
+  const session = await auth();
+  if (!session?.user?.email) return;
+
+  // Vérification propriétaire
+  const entry = await prisma.mealEntry.findUnique({
+    where: { id },
+    select: { userId: true },
+  });
+  if (!entry) return;
+
+  const me = await prisma.user.findUnique({
+    where: { email: session.user.email },
+    select: { id: true },
+  });
+  if (!me || entry.userId !== me.id) return;
+
+  await prisma.mealEntry.delete({
+    where: { id },
+  });
+
+  revalidatePath("/dashboard");
 }

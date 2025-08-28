@@ -1,7 +1,8 @@
 // app/dashboard/foods/new/page.tsx
 import { auth } from "@/auth";
 import FoodCreateForm from "@/components/foods/FoodCreateForm";
-import { createFoodAction } from "./actions"; // action serveur d'origine
+import { createFoodFromDashboardAction } from "./actions";
+
 import type { FoodFormState } from "./actions";
 
 export default async function NewFoodPage() {
@@ -15,7 +16,8 @@ export default async function NewFoodPage() {
     formData: FormData
   ): Promise<FoodFormState> {
     "use server";
-    return createFoodAction(prev, formData);
+return createFoodFromDashboardAction(prev, formData);
+
   }
 
   return (
