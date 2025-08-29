@@ -3,164 +3,71 @@
 import { auth } from "@/auth";
 import { prisma } from "@/lib/prisma";
 import { revalidatePath } from "next/cache";
-import { computeCalories } from "@/lib/computeCalories";
+import { foodSchema, FoodInput } from "@/lib/validations/food";
 
-export type AddMealState = {
+export type CreateFoodState = {
   ok?: boolean;
   error?: string;
 };
 
-// ➤ Ajouter une entrée repas
-export async function addMealEntryAction(
-  _prev: AddMealState,
+export async function createFoodFromDashboardAction(
+  _prev: CreateFoodState,
   formData: FormData
-): Promise<AddMealState> {
+): Promise<CreateFoodState> {
   const session = await auth();
   if (!session?.user?.email) return { error: "Non connecté." };
 
-  const foodId = String(formData.get("foodId") ?? "");
-  const unit = String(formData.get("unit") ?? "g") as "g" | "ml" | "portion";
-  const amount = Number(formData.get("amount") ?? 0);
-  const eatenAtRaw = formData.get("eatenAt") as string | null;
+  try {
+    // Transformer FormData → objet brut
+    const raw: Record<string, any> = {};
+    formData.forEach((value, key) => {
+      raw[key] = value;
+    });
 
-  if (!foodId) return { error: "Aliment manquant." };
-  if (!amount || amount <= 0) return { error: "Quantité invalide." };
+    // Validation avec Zod
+    const parsed: FoodInput = foodSchema.parse({
+      name: raw.name,
+      brand: raw.brand,
+      barcode: raw.barcode,
+      caloriesPer100g: raw.caloriesPer100g
+        ? Number(raw.caloriesPer100g)
+        : undefined,
+      servingSize: raw.servingSize ? Number(raw.servingSize) : undefined,
+      servingUnit: raw.servingUnit,
+      fatPer100g: raw.fatPer100g ? Number(raw.fatPer100g) : undefined,
+      saturatedPer100g: raw.saturatedPer100g
+        ? Number(raw.saturatedPer100g)
+        : undefined,
+      carbsPer100g: raw.carbsPer100g ? Number(raw.carbsPer100g) : undefined,
+      sugarPer100g: raw.sugarPer100g ? Number(raw.sugarPer100g) : undefined,
+      fiberPer100g: raw.fiberPer100g ? Number(raw.fiberPer100g) : undefined,
+      proteinPer100g: raw.proteinPer100g
+        ? Number(raw.proteinPer100g)
+        : undefined,
+    });
 
-  const food = await prisma.food.findUnique({
-    where: { id: foodId },
-    select: {
-      id: true,
-      caloriesPer100g: true,
-      caloriesPerPortion: true,
-      servingSize: true,
-      fatPer100g: true,
-      carbsPer100g: true,
-      proteinPer100g: true,
-      fatPerPortion: true,
-      carbsPerPortion: true,
-      proteinPerPortion: true,
-      micronutrientsPer100g: true,
-      micronutrientsPerPortion: true,
-    },
-  });
-  if (!food) return { error: "Aliment introuvable." };
+    // Trouver l’utilisateur connecté
+    const user = await prisma.user.findUnique({
+      where: { email: session.user.email },
+      select: { id: true },
+    });
+    if (!user) return { error: "Utilisateur introuvable." };
 
-  const calories = computeCalories({
-    caloriesPer100g: food.caloriesPer100g,
-    caloriesPerPortion: food.caloriesPerPortion,
-    servingSize: food.servingSize,
-    unit,
-    amount,
-  });
-  if (calories == null)
-    return { error: "Impossible de calculer les calories pour cet aliment." };
+    // Création en base
+    await prisma.food.create({
+      data: {
+        userId: user.id,
+        ...parsed,
+      },
+    });
 
-  // Optionnel: snapshot des macros
-  let macrosSnapshot: Record<string, number> | undefined;
-  if (unit === "portion") {
-    if (
-      food.fatPerPortion != null ||
-      food.carbsPerPortion != null ||
-      food.proteinPerPortion != null
-    ) {
-      macrosSnapshot = {
-        ...(food.fatPerPortion != null
-          ? { fat: food.fatPerPortion * amount }
-          : {}),
-        ...(food.carbsPerPortion != null
-          ? { carbs: food.carbsPerPortion * amount }
-          : {}),
-        ...(food.proteinPerPortion != null
-          ? { protein: food.proteinPerPortion * amount }
-          : {}),
-      };
+    // Rafraîchir la page dashboard
+    revalidatePath("/dashboard");
+    return { ok: true };
+  } catch (err: any) {
+    if (err.name === "ZodError") {
+      return { error: err.errors?.[0]?.message ?? "Erreur de validation." };
     }
-  } else {
-    const factor = amount / 100;
-    if (
-      food.fatPer100g != null ||
-      food.carbsPer100g != null ||
-      food.proteinPer100g != null
-    ) {
-      macrosSnapshot = {
-        ...(food.fatPer100g != null ? { fat: food.fatPer100g * factor } : {}),
-        ...(food.carbsPer100g != null
-          ? { carbs: food.carbsPer100g * factor }
-          : {}),
-        ...(food.proteinPer100g != null
-          ? { protein: food.proteinPer100g * factor }
-          : {}),
-      };
-    }
+    return { error: "Erreur lors de la création de l’aliment." };
   }
-
-  const eatenAt = eatenAtRaw ? new Date(eatenAtRaw) : new Date();
-
-  const user = await prisma.user.findUnique({
-    where: { email: session.user.email },
-    select: { id: true },
-  });
-  if (!user) return { error: "Utilisateur introuvable." };
-
-  await prisma.mealEntry.create({
-    data: {
-      userId: user.id,
-      foodId: food.id,
-      eatenAt,
-      amount,
-      unit,
-      calories,
-      macrosSnapshot: macrosSnapshot ? (macrosSnapshot as any) : undefined,
-    },
-  });
-
-  return { ok: true };
-}
-
-// ➤ Récupérer toutes les entrées de l’utilisateur
-export async function getEntries() {
-  const session = await auth();
-  if (!session?.user?.email) return [];
-
-  const user = await prisma.user.findUnique({
-    where: { email: session.user.email },
-    select: { id: true },
-  });
-  if (!user) return [];
-
-  return prisma.mealEntry.findMany({
-    where: { userId: user.id },
-    orderBy: { eatenAt: "desc" },
-    include: {
-      food: true,
-    },
-  });
-}
-
-// ➤ Supprimer une entrée
-export async function removeEntryAction(_prev: any, formData: FormData) {
-  const id = formData.get("id")?.toString();
-  if (!id) return;
-
-  const session = await auth();
-  if (!session?.user?.email) return;
-
-  // Vérification propriétaire
-  const entry = await prisma.mealEntry.findUnique({
-    where: { id },
-    select: { userId: true },
-  });
-  if (!entry) return;
-
-  const me = await prisma.user.findUnique({
-    where: { email: session.user.email },
-    select: { id: true },
-  });
-  if (!me || entry.userId !== me.id) return;
-
-  await prisma.mealEntry.delete({
-    where: { id },
-  });
-
-  revalidatePath("/dashboard");
 }
