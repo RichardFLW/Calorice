@@ -1,38 +1,28 @@
+// app/dashboard/page.tsx
 import { auth } from "@/auth";
 import { headers } from "next/headers";
 import { prisma } from "@/lib/prisma";
-import { revalidatePath } from "next/cache";
 import FoodSearch from "@/components/foods/FoodSearch";
 import DashboardSummary from "@/components/dashboard/DashboardSummary";
 import EntriesList from "@/components/dashboard/EntriesList";
 import EmptyState from "@/components/dashboard/EmptyState";
 import { addMealEntryAction, removeEntryAction } from "./actions";
 
+// Server Component
 export default async function DashboardPage() {
   const session = await auth();
   if (!session?.user?.email) return null;
 
+  // Construire l’origin absolu pour le fetch server-side (avec cookies)
   const h = await headers();
-  const proto =
-    h.get("x-forwarded-proto") ??
-    (process.env.NODE_ENV === "development" ? "http" : "https");
-  const host = h.get("host")!;
-  const origin = `${proto}://${host}`;
+  const proto = h.get("x-forwarded-proto") ?? "http";
+  const origin = `${proto}://${h.get("host")}`;
 
-  // Début de journée
+  // Début de journée (heure serveur)
   const startOfToday = new Date();
   startOfToday.setHours(0, 0, 0, 0);
 
-  // Total kcal du jour
-  const consumedToday = await prisma.mealEntry.aggregate({
-    _sum: { calories: true },
-    where: {
-      user: { email: session.user.email },
-      eatenAt: { gte: startOfToday },
-    },
-  });
-
-  // Liste des entrées du jour
+  // Entrées du jour
   const entries = await prisma.mealEntry.findMany({
     where: {
       user: { email: session.user.email },
@@ -49,7 +39,10 @@ export default async function DashboardPage() {
     },
   });
 
-  // Métabolisme / objectif
+  // Total kcal du jour (évite .aggregate qui plante chez toi)
+  const total = entries.reduce((sum, e) => sum + (e.calories ?? 0), 0);
+
+  // Métabolisme / objectif via API interne
   type Ok = {
     ok: true;
     results: {
@@ -59,9 +52,8 @@ export default async function DashboardPage() {
       activityFactor: number;
       goalFactor: number;
     };
-    profile: { goal: string; activityLevel: string };
   };
-  type Err = { ok: false; missing?: string[]; error?: string };
+  type Err = { ok: false; error: string };
 
   let stats: Ok | Err | null = null;
   try {
@@ -74,31 +66,25 @@ export default async function DashboardPage() {
     stats = { ok: false, error: "Impossible de charger les stats." };
   }
 
-  const total = consumedToday._sum.calories ?? 0;
   const target = stats && "results" in stats ? stats.results.target : null;
   const remaining = target != null ? Math.max(0, target - total) : null;
 
-  // Bridge universel vers addMealEntryAction
+  // Bridge vers la server action (compatible 2 signatures)
   async function addMealBridge(formData: FormData) {
     "use server";
-    const arity = (addMealEntryAction as any).length;
+    const arity = (addMealEntryAction as unknown as { length: number }).length;
     if (arity >= 2) {
-      return (addMealEntryAction as any)({}, formData);
+      // @ts-expect-error — compat ancienne signature (prevState, formData)
+      return addMealEntryAction({}, formData);
     }
-    return (addMealEntryAction as any)(formData);
+    // @ts-expect-error — compat nouvelle signature (formData)
+    return addMealEntryAction(formData);
   }
 
   return (
     <section className="space-y-6">
-      <h1 className="text-2xl font-semibold">Dashboard</h1>
-
-      {/* Recherche + ajout */}
       <FoodSearch addAction={addMealBridge} />
-
-      {/* Cartes récap */}
       <DashboardSummary total={total} target={target} remaining={remaining} />
-
-      {/* Liste des entrées */}
       {entries.length > 0 ? (
         <EntriesList entries={entries} removeAction={removeEntryAction} />
       ) : (
