@@ -8,35 +8,32 @@ datasource db {
   url      = env("DATABASE_URL")
 }
 
-/// ──────────────────────────────────────────────────────────────────────────
-/// Enums
-/// ──────────────────────────────────────────────────────────────────────────
-enum Sex {
-  MALE
-  FEMALE
-  OTHER
+model User {
+  id            String    @id @default(cuid())
+  name          String?
+  email         String?   @unique
+  emailVerified DateTime? @map("email_verified")
+  image         String?
+
+  accounts      Account[]
+  sessions      Session[]
+
+  // Relation inverse
+  mealEntries   MealEntry[]
+
+  // Champs profil (optionnels)
+  age           Int?
+  weightKg      Float?    @map("weight_kg")
+  heightCm      Float?    @map("height_cm")
+  sex           String?
+  activityLevel String?   @map("activity_level")
+  goal          String?
+
+  @@map("users")
 }
 
-enum ActivityLevel {
-  SEDENTARY
-  LIGHT
-  MODERATE
-  ACTIVE
-  VERY_ACTIVE
-}
-
-enum Goal {
-  LOSE_WEIGHT
-  MAINTAIN
-  GAIN_WEIGHT
-  RECOMP
-}
-
-/// ──────────────────────────────────────────────────────────────────────────
-/// Auth.js (NextAuth) — schéma standard + extension du User
-/// ──────────────────────────────────────────────────────────────────────────
 model Account {
-  id                String @id @default(cuid())
+  id                String  @id @default(cuid())
   userId            String  @map("user_id")
   type              String
   provider          String
@@ -66,33 +63,6 @@ model Session {
   @@map("sessions")
 }
 
-model User {
-  id             String    @id @default(cuid())
-  name           String?
-  email          String?   @unique
-  emailVerified  DateTime? @map("email_verified")
-  image          String?
-
-  // ── Profil nutrition/forme
-  age            Int?
-  weightKg       Float?    @map("weight_kg")
-  heightCm       Int?      @map("height_cm")
-  sex            Sex?
-  activityLevel  ActivityLevel? @map("activity_level")
-  goal           Goal?
-
-  // ── Timestamps
-  createdAt      DateTime @default(now())           @map("created_at")
-  updatedAt      DateTime @updatedAt @default(now()) @map("updated_at")
-
-  // Relations
-  accounts       Account[]
-  sessions       Session[]
-  meals          MealEntry[]
-
-  @@map("users")
-}
-
 model VerificationToken {
   identifier String
   token      String
@@ -102,39 +72,22 @@ model VerificationToken {
   @@map("verification_tokens")
 }
 
-/// ──────────────────────────────────────────────────────────────────────────
-/// Domaine Calorice
-/// ──────────────────────────────────────────────────────────────────────────
 model Food {
-  id          String   @id @default(cuid())
-  name        String
-  /// Marques séparées par des virgules (ex: "Leclerc, Marque Repère")
-  brands      String?
-  /// Code barre (EAN) si présent
-  barcode     String?  @unique
-
-  /// Portion par défaut (ex: 30.0) + unité ("g" | "ml" | "portion" | "pièce")
-  servingSize Float?   @map("serving_size")
-  servingUnit String?  @map("serving_unit")
-
-  /// Calories et macros pour 100 g/ml
-  caloriesPer100g Float? @map("calories_per_100g")
-  fatPer100g      Float? @map("fat_per_100g")
-  carbsPer100g    Float? @map("carbs_per_100g")
-  proteinPer100g  Float? @map("protein_per_100g")
-
-  /// Calories et macros par portion
-  caloriesPerPortion Float? @map("calories_per_portion")
-  fatPerPortion      Float? @map("fat_per_portion")
-  carbsPerPortion    Float? @map("carbs_per_portion")
-  proteinPerPortion  Float? @map("protein_per_portion")
-
-  /// Micro-nutriments (JSON libre, ex: {"vitamineC_mg": 60, "fer_mg": 2.1})
-  micronutrientsPer100g   Json? @map("micros_per_100g")
-  micronutrientsPerPortion Json? @map("micros_per_portion")
-
-  /// Divers extensibles (ex: nutriscore, ingrédients, allergènes…)
-  extra Json?
+  id        String   @id @default(cuid())
+  name      String
+  brands    String?
+  barcode   String?  @unique
+  // Infos portions / unités (tout optionnel pour matcher l’API existante)
+  servingSize         Float?  @map("serving_size")          // ex: 100
+  servingUnit         String? @map("serving_unit")          // ex: "g" | "ml" | "portion"
+  caloriesPer100g     Float?  @map("calories_per_100g")
+  caloriesPerPortion  Float?  @map("calories_per_portion")
+  fatPer100g          Float?  @map("fat_per_100g")
+  carbsPer100g        Float?  @map("carbs_per_100g")
+  proteinPer100g      Float?  @map("protein_per_100g")
+  fatPerPortion       Float?  @map("fat_per_portion")
+  carbsPerPortion     Float?  @map("carbs_per_portion")
+  proteinPerPortion   Float?  @map("protein_per_portion")
 
   createdAt DateTime @default(now()) @map("created_at")
   updatedAt DateTime @updatedAt      @map("updated_at")
@@ -142,33 +95,22 @@ model Food {
   mealEntries MealEntry[]
 
   @@index([name])
-  @@index([barcode])
+  @@index([brands])
   @@map("foods")
 }
 
 model MealEntry {
   id        String   @id @default(cuid())
   userId    String   @map("user_id")
-  foodId    String   @map("food_id")
-  /// Date/heure de consommation (UTC)
-  eatenAt   DateTime @map("eaten_at")
+  foodId    String?  @map("food_id")
 
-  /// Quantité saisie par l’utilisateur (ex: 250)
+  eatenAt   DateTime @default(now()) @map("eaten_at")
   amount    Float?
-  /// Unité correspondante ("g" | "ml" | "portion" | "pièce")
   unit      String?
+  calories  Float?
 
-  /// Snapshots (fige les valeurs au moment de l’enregistrement)
-  calories        Float?
-  macrosSnapshot  Json?   @map("macros_snapshot")   // ex: { fat: 10.2, carbs: 35.0, protein: 7.5 }
-  microsSnapshot  Json?   @map("micros_snapshot")   // ex: { vitamineC_mg: 60 }
-
-  note      String?
-
-  createdAt DateTime @default(now()) @map("created_at")
-
-  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
-  food Food @relation(fields: [foodId], references: [id], onDelete: Restrict)
+  user User  @relation(fields: [userId], references: [id], onDelete: Cascade)
+  food Food? @relation(fields: [foodId], references: [id], onDelete: Restrict)
 
   @@index([userId, eatenAt])
   @@map("meal_entries")

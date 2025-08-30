@@ -1,19 +1,8 @@
-"use client";
-
-import { useRouter } from "next/navigation";
-
+// components/dashboard/EmptyState.tsx
 export default function EmptyState() {
-  const router = useRouter();
-
   return (
-    <div className="text-center p-6 border rounded bg-gray-50">
-      <p className="mb-4 text-gray-600">Aucun résultat pour cette recherche.</p>
-      <button
-        onClick={() => router.push("/dashboard/foods/new")}
-        className="px-4 py-2 text-white bg-blue-600 rounded hover:bg-blue-700"
-      >
-        Ajouter un aliment
-      </button>
+    <div className="rounded-xl border p-6 text-center text-sm text-muted-foreground">
+      Aucune entrée aujourd’hui.
     </div>
   );
 }
